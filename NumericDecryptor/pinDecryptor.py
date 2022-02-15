@@ -47,21 +47,31 @@ class PinDecryptor:
                 return i
             i += 1
 
-    def generate_cipher(self):
+    def generate_cipher_manually(self):
         e = int(input('Type public key:'))
         n = int(input('Type n value'))
-        s = n+1
+        self.generate_cipher(e, n)
+
+    def generate_cipher_en(self, e, n):
+        s = n + 1
         while s > n:
             s = int(input('Type numeric cipher(lower than n)'))
-        v = s**e % n
-        print('Cypher:'+str(v))
+        v = s ** e % n
+        print('Cypher:' + str(v))
         return v
+
+
+    def generate_cipher(self, uid):
+        e, n = self.databasemanager.get_record(uid)
+        if not (e is None or n is None):
+            self.generate_cipher_en(e, n)
 
     def decrypt_cipher(self):
         n = int(input('Type your n value:'))
         p = int(input('Type your private key:'))
         cypher = int(input('Type cypher:'))
         v = cypher**p % n
+        print('Cypher:'+str(cypher))
         print('Decrypted cypher:'+str(v))
         return v
 
@@ -102,7 +112,11 @@ class PinDecryptor:
                 self.generate_identity()
                 return 4
             case '5':
-                self.generate_cipher()
+                #try:
+                uid = int(input("Type user Id"))
+                self.generate_cipher(uid)
+                #except TypeError:
+                    #self.generate_cipher()
                 return 5
             case '6':
                 self.decrypt_cipher()

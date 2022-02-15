@@ -1,10 +1,10 @@
 import sqlite3
 
+
 class DatabaseManager:
     def __init__(self):
         self.db_path = "pindecryptor.db"
         self.validate_db()
-
 
     def validate_db(self):
         try:
@@ -62,6 +62,14 @@ class DatabaseManager:
         cursor.execute("Delete FROM Decrypto WHERE Id = {}".format(uid))
         conn.commit()
         conn.close()
+
+    def get_record(self, uid):#return e,n
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT PublicKey,KeyRange FROM Decrypto WHERE Id = {}".format(uid))
+        values = cursor.fetchone()
+        conn.close()
+        return values
 
     def print_all(self):
         conn = sqlite3.connect(self.db_path)
