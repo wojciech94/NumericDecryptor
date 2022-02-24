@@ -1,24 +1,48 @@
-import random
+from random import randint
 from databaseManager import DatabaseManager
 
 
 class PinDecryptor:
     def __init__(self):
         self.databasemanager = DatabaseManager()
+        self.public_key = None
+        self.cypher_range = None
+        self.init_identificator()
 
-    def generate_identity(self):
-        n, t = self.initialize_nt()
-        e = self.generate_public_key(t)
-        d = self.generate_private_key(e, t)
-        print('n:' + str(n))
-        print("e:" + str(e))
-        print('d:'+str(d))
+    def init_identificator(self):
+        try:
+            with open('myidentificator.txt', 'r') as f:
+                lines = f.readlines()
+                count = sum(1 for line in lines)
+                if count == 2:
+                   self.public_key = lines[0].rsplit()[0]
+                   self.cypher_range = lines[1]
+        except FileNotFoundError:
+            self.public_key = 'xxx'
+            self.cypher_range = 'xxxx'
 
-    def initialize_nt(self):
-        p = int(input("Type p:"))
-        q = int(input("Type q:"))
-        n = p * q
-        t = (p - 1) * (q - 1)
+    def update_identificator(self, public_key, cypher_range):
+        self.public_key = public_key
+        self.cypher_range = cypher_range
+        f = open('myidentificator.txt', 'w')
+        f.writelines('{0}\n{1}'.format(self.public_key, self.cypher_range))
+        f.close()
+
+    def generate_identity(self, ran):
+        ran = int(ran)
+        n, t = self.initialize_nt(ran)
+        pub = self.generate_public_key(t)
+        priv = self.generate_private_key(pub, t)
+        self.update_identificator(pub, n)
+        return pub, priv, n
+
+    def initialize_nt(self, ran):
+        p = q = 0
+        while p*q < ran:
+            p = randint(2, 200)
+            q = randint(2, 200)
+            n = p * q
+            t = (p - 1) * (q - 1)
         return n, t
 
     def nwd(self, a, b):
@@ -38,7 +62,7 @@ class PinDecryptor:
                 i += 1
                 tab.append(num)
             num += 1
-        return tab[random.randint(0, 4)]
+        return tab[randint(0, 4)]
 
     def generate_private_key(self, e, toc):
         i = 1
