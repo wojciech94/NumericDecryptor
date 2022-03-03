@@ -18,13 +18,11 @@ class DatabaseManager:
         cursor = conn.cursor()
         exist_query = "SELECT count(name) FROM sqlite_master WHERE type = 'table' AND name = 'Decrypto'"
         cursor.execute(exist_query)
-        if cursor.fetchone()[0] == 1:
+        if cursor.fetchone() is not None:
             conn.close()
-            print("Table exist")
             return True
         else:
             conn.close()
-            print("Table not exist")
             return False
 
     def create_table(self):
@@ -41,15 +39,19 @@ class DatabaseManager:
         except ConnectionError:
             print("Cannot create table")
 
-    def insert_record(self, nick, public_key, n):
+    def insert_record(self, uid, nick, public_key, n):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM Decrypto")
         empty_table = cursor.fetchone() is None
         next_id = 0
         if not empty_table:
-            cursor.execute("SELECT Id FROM Decrypto WHERE Id  = (SELECT MAX(Id) FROM Decrypto)")
-            next_id = cursor.fetchone()[0] + 1
+            cursor.execute("Select Id FROM Decrypto WHERE Id = {}".format(uid))
+            if cursor.fetchone() is None:
+                next_id = uid
+            else:
+                cursor.execute("SELECT Id FROM Decrypto WHERE Id  = (SELECT MAX(Id) FROM Decrypto)")
+                next_id = cursor.fetchone()[0] + 1
         data = (next_id, nick, public_key, n)
         query = "INSERT INTO Decrypto Values(?, ?, ?, ?)"
         cursor.execute(query, data)
@@ -63,7 +65,7 @@ class DatabaseManager:
         conn.commit()
         conn.close()
 
-    def get_record(self, uid):#return e,n
+    def get_record(self, uid):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("SELECT PublicKey,KeyRange FROM Decrypto WHERE Id = {}".format(uid))
@@ -71,9 +73,10 @@ class DatabaseManager:
         conn.close()
         return values
 
-    def print_all(self):
+    def get_all(self):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM Decrypto")
-        print(cursor.fetchall())
+        cursor.execute("SELECT * FROM Decrypto ORDER BY Id ASC")
+        resoults = cursor.fetchall()
         conn.close()
+        return resoults
