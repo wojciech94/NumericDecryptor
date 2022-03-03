@@ -1,4 +1,4 @@
-from tkinter import Tk, Frame, Button, Label, Entry, StringVar, font
+from tkinter import Tk, Frame, Button, Label, Entry, StringVar, PhotoImage, font
 from pinDecryptor import PinDecryptor
 
 
@@ -6,7 +6,7 @@ class Appwindow(Tk):
 
     def __init__(self):
         super().__init__()
-        self.geometry('{0}x{1}'.format(self.winfo_screenwidth(), self.winfo_screenheight()-100))
+        self.geometry('{0}x{1}'.format(self.winfo_screenwidth(), self.winfo_screenheight() - 100))
         self.title('Numeric Decryptor')
 
         self.columnconfigure(0, weight=1)
@@ -16,6 +16,8 @@ class Appwindow(Tk):
         self.menu_frame = None
         self.active_frame = None
         self.font = None
+        self.rem_img = None
+        self.add_img = None
         self.debug_info = StringVar()
         self.public_key_label = StringVar()
         self.cypher_range_label = StringVar()
@@ -29,8 +31,8 @@ class Appwindow(Tk):
     def clear_elements(self):
         if self.active_frame is not None:
             elements = self.active_frame.grid_slaves()
-            for l in elements:
-                l.destroy()
+            for el in elements:
+                el.destroy()
             self.active_frame = None
 
     def init_font(self):
@@ -39,10 +41,10 @@ class Appwindow(Tk):
     def init_menu(self):
         if self.menu_frame is None:
             self.menu_frame = Frame(self, background='#56809C')
-            self.menu_frame.columnconfigure(0, weight=1, uniform=1)
-            for i in range(6):
-                self.menu_frame.rowconfigure(i, weight=1, uniform=1)
-            self.menu_frame.rowconfigure(6, weight=4, uniform=1)
+            self.menu_frame.columnconfigure(0, weight=1, uniform='1')
+            for i in range(5):
+                self.menu_frame.rowconfigure(i, weight=1, uniform='1')
+            self.menu_frame.rowconfigure(5, weight=3, uniform='1')
             self.menu_frame.grid(column=0, row=0, rowspan=5, sticky='nsew')
             self.menu_frame.grid_propagate(False)
             self.cypher_range_label.set(str(self.pin_decryptor.cypher_range))
@@ -55,18 +57,15 @@ class Appwindow(Tk):
         b_manage_users = Button(self.menu_frame, font=self.font, bg='#394B59', fg='white', text='Manage users',
                                 command=lambda: self.manage_users_frame())
         b_manage_users.grid(column=0, row=1, padx=5, sticky='nsew')
-        b_show_database_users = Button(self.menu_frame, font=self.font, bg='#394B59', fg='white',
-                                       text='Show users database', command=lambda: self.show_database_frame())
-        b_show_database_users.grid(column=0, row=2, padx=5, pady=5, sticky='nsew')
         b_encrypt_cypher = Button(self.menu_frame, font=self.font, bg='#394B59', fg='white', text='Encrypt cypher',
                                   command=lambda: self.encrypt_cypher_frame())
-        b_encrypt_cypher.grid(column=0, row=3, padx=5, sticky='nsew')
+        b_encrypt_cypher.grid(column=0, row=2, padx=5, pady=5, sticky='nsew')
         b_decrypt_cypher = Button(self.menu_frame, font=self.font, bg='#394B59', fg='white', text='Decrypt cypher',
                                   command=lambda: self.decrypt_cypher_frame())
-        b_decrypt_cypher.grid(column=0, row=4, padx=5, pady=5, sticky='nsew')
+        b_decrypt_cypher.grid(column=0, row=3, padx=5, sticky='nsew')
         b_show_options = Button(self.menu_frame, font=self.font, bg='#394B59', fg='white', text='Show help',
                                 command=lambda: self.show_help_frame())
-        b_show_options.grid(column=0, row=5, padx=5, sticky='nsew')
+        b_show_options.grid(column=0, row=4, padx=5, pady=5, sticky='nsew')
 
     def create_id_frame(self):
         self.clear_elements()
@@ -120,7 +119,7 @@ class Appwindow(Tk):
     def show_id_frame(self):
         if self.menu_frame is not None:
             show_id_frame = Frame(self.menu_frame, bg='#394B59')
-            show_id_frame.grid(column=0, row=6, padx=5, pady=5, sticky='nsew')
+            show_id_frame.grid(column=0, row=5, padx=5, pady=5, sticky='nsew')
             show_id_frame.grid_propagate(False)
             show_id_frame.columnconfigure(0, weight=1)
             for i in range(4):
@@ -138,21 +137,63 @@ class Appwindow(Tk):
 
     def manage_users_frame(self):
         self.clear_elements()
+        self.rem_img = PhotoImage(file='delete.png')
+        self.add_img = PhotoImage(file='add.png')
+        show_db_frame = Frame(self, background='#D9DCFB')
+        show_db_frame.grid(column=1, row=0, sticky='nsew')
+        txtsample = self.get_db_users()
+        rows = len(txtsample)
+        for i in range(5):
+            show_db_frame.columnconfigure(i, weight=1, uniform='1')
+        for j in range(len(txtsample) + 5):
+            show_db_frame.rowconfigure(j, weight=1, uniform='1')
+        show_db_frame.grid_propagate(False)
+        lb1 = Label(show_db_frame, bg='#D9DCFB', font=self.font, text='List of users')
+        lb1.grid(column=0, columnspan=4, row=0, sticky='nsew')
+        titlab = ['Id', 'Nick', 'Public Key', 'Range']
+        lab = [['' for x in range(4)] for y in range(rows)]
+        butt = [['' for x in range(4)] for y in range(rows)]
+        add_ent = ['' for x in range(4)]
+        for i in range(4):
+            Label(show_db_frame, text=titlab[i], font=self.font, justify='center').grid(
+                column=i, row=1, sticky='nsew', padx=5, pady=5)
+            Label(show_db_frame, text=titlab[i], font=self.font, justify='center').grid(
+                column=i, row=len(txtsample) + 3, sticky='nsew', padx=5, pady=5)
+        for j in range(rows):
+            for k in range(4):
+                lab[j][k] = Label(show_db_frame, text=txtsample[j][k], font=self.font, justify='center')
+                lab[j][k].grid(column=k, row=j + 2, sticky='nsew', padx=5, pady=5)
+            butt[j] = Button(show_db_frame, image=self.rem_img, bg='#C9CCCB', borderwidth=0, activebackground='#C9CCCB',
+                             command=lambda jj=j: self.delete_user(txtsample[jj][0]))
+            butt[j].grid(column=4, row=j + 2, padx=5, pady=5)
+        lb2 = Label(show_db_frame, bg='#D9DCFB', font=self.font, text='Add User to Database')
+        lb2.grid(column=0, columnspan=4, row=len(txtsample) + 2, sticky='nsew')
+        ent_txt_var = [StringVar(show_db_frame) for i in range(4)]
+        for i in range(4):
+            add_ent[i] = Entry(show_db_frame, font=self.font, justify='center',
+                               textvariable=ent_txt_var[i])
+            add_ent[i].grid(column=i, row=len(txtsample) + 4, sticky='nsew', padx=5, pady=5)
+        abutt = Button(show_db_frame, image=self.add_img, bg='#C9CCCB', borderwidth=0, activebackground='#C9CCCB',
+                       command=lambda: self.add_user(ent_txt_var))
+        abutt.grid(column=4, row=len(txtsample) + 4, padx=5, pady=5)
+        self.active_frame = show_db_frame
 
-    def add_user(self):
-        self.clear_elements()
+    def get_db_users(self):
+        data = self.pin_decryptor.databasemanager.get_all()
+        data = [d for d in data]
+        return data
 
-    def delete_user(self):
-        self.clear_elements()
+    def add_user(self, user_pack):
+        if len(user_pack) == 4:
+            self.pin_decryptor.add_user(user_pack[0].get(), user_pack[1].get(), user_pack[2].get(), user_pack[3].get())
+        self.show_database_frame()
 
-    def manage_users_frame(self):
-        self.clear_elements()
-
-    def show_database_frame(self):
-        self.clear_elements()
+    def delete_user(self, uid):
+        self.pin_decryptor.delete_user(uid)
+        self.show_database_frame()
 
     def encrypt_cypher_frame(self):
-        self.clear_elements()
+        pass
 
     def decrypt_cypher_frame(self):
         self.clear_elements()
