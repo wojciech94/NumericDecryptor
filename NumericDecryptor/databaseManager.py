@@ -3,27 +3,11 @@ import sqlite3
 
 class DatabaseManager:
     def __init__(self):
-        self.db_path = "pindecryptor.db"
-        self.validate_db()
-
-    def validate_db(self):
-        try:
-            if not self.check_table_existance():
-                self.create_table()
-        except FileNotFoundError:
-            print("DbNotConnected")
-
-    def check_table_existance(self):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        exist_query = "SELECT count(name) FROM sqlite_master WHERE type = 'table' AND name = 'Decrypto'"
-        cursor.execute(exist_query)
-        if cursor.fetchone() is not None:
-            conn.close()
-            return True
-        else:
-            conn.close()
-            return False
+        self.db_path = 'pindecryptor.db'
+        self.table_name = 'Decrypto'
+        cond = DatabaseValidator.validate_database(self.db_path, self.table_name)
+        if not cond:
+            self.create_table()
 
     def create_table(self):
         try:
@@ -35,7 +19,6 @@ class DatabaseManager:
             PublicKey INT NOT NULL,
             KeyRange INT NOT NULL)''')
             connection.close()
-            print("Table created")
         except ConnectionError:
             print("Cannot create table")
 
@@ -47,11 +30,13 @@ class DatabaseManager:
         next_id = 0
         if not empty_table:
             cursor.execute("Select Id FROM Decrypto WHERE Id = {}".format(uid))
-            if cursor.fetchone() is None:
-                next_id = uid
-            else:
+            if cursor.fetchone() is not None:
+                # set next id as max (id) +1
                 cursor.execute("SELECT Id FROM Decrypto WHERE Id  = (SELECT MAX(Id) FROM Decrypto)")
                 next_id = cursor.fetchone()[0] + 1
+            else:
+                # if id not in database insert record with selected id
+                next_id = uid
         data = (next_id, nick, public_key, n)
         query = "INSERT INTO Decrypto Values(?, ?, ?, ?)"
         cursor.execute(query, data)
@@ -73,10 +58,25 @@ class DatabaseManager:
         conn.close()
         return values
 
-    def get_all(self):
+    def get_records(self, asc=True):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM Decrypto ORDER BY Id ASC")
-        resoults = cursor.fetchall()
+        order = 'ASC' if asc else 'DESC'
+        cursor.execute("SELECT * FROM Decrypto ORDER BY Id {}".format(order))
+        results = cursor.fetchall()
         conn.close()
-        return resoults
+        return results
+
+
+class DatabaseValidator:
+    @staticmethod
+    def validate_database(path: str, name: str):  # Check is table (name) exist in db path
+        conn = sqlite3.connect(path)
+        cursor = conn.cursor()
+        exist_query = "SELECT count(name) FROM sqlite_master WHERE type = 'table' AND name = '{}'".format(name)
+        cursor.execute(exist_query)
+        is_table_exist = False
+        if cursor.fetchone() is not None:
+            is_table_exist = True
+        conn.close()
+        return is_table_exist
