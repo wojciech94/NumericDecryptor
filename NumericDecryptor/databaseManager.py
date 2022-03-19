@@ -75,8 +75,9 @@ class DatabaseValidator:
         cursor = conn.cursor()
         exist_query = "SELECT count(name) FROM sqlite_master WHERE type = 'table' AND name = '{}'".format(name)
         cursor.execute(exist_query)
+        fetch = cursor.fetchone()
         is_table_exist = False
-        if cursor.fetchone() is not None:
+        if fetch is not None and fetch[0] != 0:
             is_table_exist = True
         conn.close()
         return is_table_exist
