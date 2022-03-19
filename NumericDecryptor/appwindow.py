@@ -1,5 +1,4 @@
 from tkinter import Tk, Frame, Button, Label, Entry, StringVar, PhotoImage, font
-
 from pinDecryptor import PinDecryptor, DecryptorMath
 
 
@@ -7,12 +6,16 @@ class Appwindow(Tk):
 
     def __init__(self):
         super().__init__()
-        self.geometry('{0}x{1}'.format(self.winfo_screenwidth(), self.winfo_screenheight() - 100))
+        self.geometry('{0}x{1}'.format(self.winfo_screenwidth(), self.winfo_screenheight()))
         self.title('Numeric Decryptor')
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=3)
         self.rowconfigure(0, weight=1)
+
+        self.full_state = True
+        self.state('zoomed')
+        self.bind("<Escape>", self.toggle_full_screen)
 
         self.menu_frame = None
         self.active_frame = None
@@ -20,6 +23,8 @@ class Appwindow(Tk):
         self.mid_font = None
         self.rem_img = None
         self.add_img = None
+        self.next_img = None
+        self.prev_img = None
         self.help_mode = 1
         self.debug_info = StringVar()
         self.public_key_label = StringVar()
@@ -31,6 +36,7 @@ class Appwindow(Tk):
         self.init_menu()
         self.show_menu_frame()
         self.show_id_frame()
+        self.show_help_frame()
 
     def clear_and_reset(self):
         self.clear_frame(self.active_frame)
@@ -47,13 +53,19 @@ class Appwindow(Tk):
         self.help_mode = 1
         self.active_frame = None
 
+    def toggle_full_screen(self, event=None):
+        self.full_state = not self.full_state
+        self.attributes('-fullscreen', self.full_state)
+
     def init_font(self):
-        self.font = font.Font(family='courier', size=16, weight='bold')
+        self.font = font.Font(family='courier', size=18, weight='bold')
         self.mid_font = font.Font(family='courier', size=22, weight='bold')
 
     def init_img(self):
-        self.rem_img = PhotoImage(file='delete.png')
-        self.add_img = PhotoImage(file='add.png')
+        self.rem_img = PhotoImage(file='images/delete.png')
+        self.add_img = PhotoImage(file='images/add.png')
+        self.next_img = PhotoImage(file='images/next.png')
+        self.prev_img = PhotoImage(file='images/prev.png')
 
     def init_menu(self):
         if self.menu_frame is None:
@@ -69,7 +81,7 @@ class Appwindow(Tk):
 
     def show_menu_frame(self):
         b_create_id = Button(self.menu_frame, font=self.font, bg='#394B59', fg='white',
-                             text='Create your identyfikator', command=lambda: self.create_id_frame())
+                             text='Create your Id', command=lambda: self.create_id_frame())
         b_create_id.grid(column=0, row=0, padx=5, pady=5, sticky='nsew')
         b_manage_users = Button(self.menu_frame, font=self.font, bg='#394B59', fg='white', text='Manage users',
                                 command=lambda: self.manage_users_frame())
@@ -87,7 +99,7 @@ class Appwindow(Tk):
     def create_id_frame(self):
         self.clear_and_reset()
         self.update_cypher_entry()
-        create_id_frame = Frame(self, background='#D9DCFB')
+        create_id_frame = Frame(self, background='#394B59')
         create_id_frame.grid(column=1, row=0, sticky='nsew')
         for c in range(2):
             create_id_frame.columnconfigure(c, weight=1, uniform='1')
@@ -99,19 +111,19 @@ class Appwindow(Tk):
         cypher_entry_var = StringVar(create_id_frame)
         cypher_entry_var.trace('w', lambda *args: self.update_cypher_entry(cypher_entry_var))
         entry_font = font.Font(family='courier', size=20, slant='italic')
-        l0 = Label(create_id_frame, bg='#394B59', fg='red', font=self.mid_font, textvariable=self.debug_info)
+        l0 = Label(create_id_frame, bg='#D3D9FB', fg='red', font=self.mid_font, textvariable=self.debug_info)
         l0.grid(column=0, columnspan=2, row=0, padx=5, pady=5, sticky='nsew')
-        l1 = Label(create_id_frame, bg='#394B59', fg='white', text='Cypher range', font=self.mid_font)
+        l1 = Label(create_id_frame, bg='#D3D9FB', text='Cypher range', font=self.mid_font)
         l1.grid(column=0, row=1, padx=5, pady=5, sticky='nsew')
-        e1 = Entry(create_id_frame, bg='#394B59', fg='white', textvariable=cypher_entry_var, font=entry_font,
+        e1 = Entry(create_id_frame, bg='#E3E9FF', textvariable=cypher_entry_var, font=entry_font,
                    justify='center')
         e1.grid(column=1, row=1, padx=5, pady=5, sticky='nsew')
-        b1 = Button(create_id_frame, bg='#394B59', fg='white', text='Generate Identyfikator', font=self.mid_font,
+        b1 = Button(create_id_frame, bg='#A8B2C8', text='Generate Id', font=self.mid_font,
                     command=lambda: self.gen_identity(pub_key_txt, prv_key_txt, cypher_entry_var))
         b1.grid(column=0, row=2, columnspan=2, padx=5, pady=5, sticky='nsew')
-        l2 = Label(create_id_frame, bg='#394B59', fg='white', textvariable=pub_key_txt, font=self.mid_font)
+        l2 = Label(create_id_frame, bg='#D3D9FB', textvariable=pub_key_txt, font=self.mid_font)
         l2.grid(column=0, row=3, padx=5, pady=5, sticky='nsew')
-        l3 = Label(create_id_frame, bg='#394B59', fg='white', textvariable=prv_key_txt, font=self.mid_font)
+        l3 = Label(create_id_frame, bg='#D3D9FB', textvariable=prv_key_txt, font=self.mid_font)
         l3.grid(column=1, row=3, padx=5, pady=5, sticky='nsew')
         self.active_frame = create_id_frame
 
@@ -162,7 +174,7 @@ class Appwindow(Tk):
 
     def manage_users_frame(self):
         self.clear_and_reset()
-        show_db_frame = Frame(self, bg='#D3D9FB')
+        show_db_frame = Frame(self, bg='#394B59')
         show_db_frame.grid(column=1, row=0, sticky='nsew')
         txtsample = self.get_db_users()
         rows = len(txtsample)
@@ -171,17 +183,17 @@ class Appwindow(Tk):
         for j in range(len(txtsample) + 5):
             show_db_frame.rowconfigure(j, weight=1, uniform='1')
         show_db_frame.grid_propagate(False)
-        lb1 = Label(show_db_frame, font=self.font, text='List of users')
+        lb1 = Label(show_db_frame, bg='#A8B2C8', font=self.font, text='List of users')
         lb1.grid(column=0, columnspan=4, row=0, sticky='nsew', padx=5, pady=5)
         titlab = ['Id', 'Nick', 'Public Key', 'Range']
-        lab = [[Label(show_db_frame, font=self.font, justify='center') for _ in range(4)] for _ in range(rows)]
-        butt = [Button(show_db_frame, image=self.rem_img, bg='#D3D9FB', borderwidth=0, activebackground='#D3D9FB')
+        lab = [[Label(show_db_frame, bg='#D3D9FB', font=self.font, justify='center') for _ in range(4)] for _ in range(rows)]
+        butt = [Button(show_db_frame, image=self.rem_img, bg='#394B59', borderwidth=0, activebackground='#394B59')
                 for _ in range(rows)]
         add_ent = [Entry(show_db_frame, font=self.font, justify='center') for _ in range(4)]
         for i in range(4):
-            Label(show_db_frame, text=titlab[i], font=self.font, justify='center').grid(
+            Label(show_db_frame, bg='#D3D9FB', text=titlab[i], font=self.font, justify='center').grid(
                 column=i, row=1, sticky='nsew', padx=5, pady=5)
-            Label(show_db_frame, text=titlab[i], font=self.font, justify='center').grid(
+            Label(show_db_frame, bg='#D3D9FB', text=titlab[i], font=self.font, justify='center').grid(
                 column=i, row=len(txtsample) + 3, sticky='nsew', padx=5, pady=5)
         for j in range(rows):
             for k in range(4):
@@ -189,13 +201,13 @@ class Appwindow(Tk):
                 lab[j][k].grid(column=k, row=j + 2, sticky='nsew', padx=5, pady=5)
             butt[j].configure(command=lambda jj=j: self.delete_user(txtsample[jj][0]))
             butt[j].grid(column=4, row=j + 2, padx=5, pady=5)
-        lb2 = Label(show_db_frame, font=self.font, text='Add User to Database')
+        lb2 = Label(show_db_frame, bg='#A8B2C8', font=self.font, text='Add User to Database')
         lb2.grid(column=0, columnspan=4, row=len(txtsample) + 2, sticky='nsew', padx=5, pady=5)
         ent_txt_var = [StringVar(show_db_frame) for _ in range(4)]
         for i in range(4):
             add_ent[i] = Entry(show_db_frame, textvariable=ent_txt_var[i], font=self.font, justify='center')
             add_ent[i].grid(column=i, row=len(txtsample) + 4, sticky='nsew', padx=5, pady=5)
-        abutt = Button(show_db_frame, image=self.add_img, bg='#D3D9FB', borderwidth=0, activebackground='#D3D9FB',
+        abutt = Button(show_db_frame, image=self.add_img, bg='#394B59', borderwidth=0, activebackground='#394B59',
                        command=lambda: self.add_user(ent_txt_var))
         abutt.grid(column=4, row=len(txtsample) + 4, padx=5, pady=5)
         self.active_frame = show_db_frame
@@ -246,7 +258,7 @@ class Appwindow(Tk):
         ent_cipher = Entry(encrypt_cypher_frame, bg='#E3E9FF', textvariable=cipher_var, font=self.mid_font,
                            justify='center')
         ent_cipher.grid(column=1, row=1, sticky='nsew', padx=5, pady=5)
-        butt1 = Button(encrypt_cypher_frame, bg='#D3D9FB', text='Get user data by Id', font=self.mid_font,
+        butt1 = Button(encrypt_cypher_frame, bg='#A8B2C8', text='Get user data by Id', font=self.mid_font,
                        command=lambda: self.get_data_by_id(id_var, pub_var, range_var))
         butt1.grid(column=0, row=2, sticky='nsew', padx=5, pady=5)
         ent_id = Entry(encrypt_cypher_frame, bg='#E3E9FF', textvariable=id_var, font=self.mid_font, justify='center')
@@ -259,7 +271,7 @@ class Appwindow(Tk):
         ent_pubkey.grid(column=0, row=4, sticky='nsew', padx=5, pady=5)
         ent_range = Entry(encrypt_cypher_frame, bg='#E3E9FF', textvariable=range_var, font=self.mid_font, justify='center')
         ent_range.grid(column=1, row=4, sticky='nsew', padx=5, pady=5)
-        butt2 = Button(encrypt_cypher_frame, bg='#D3D9FB', text='Generate encrypted cypher', font=self.mid_font,
+        butt2 = Button(encrypt_cypher_frame, bg='#A8B2C8', text='Generate encrypted cypher', font=self.mid_font,
                        command=lambda: self.encrypt_cypher(pub_var, range_var, cipher_var, encrypt_var))
         butt2.grid(column=0, columnspan=2, row=5, sticky='nsew', padx=5, pady=5)
         lab5 = Label(encrypt_cypher_frame, bg='#D3D9FB', textvariable=encrypt_var, font=self.mid_font)
@@ -305,12 +317,12 @@ class Appwindow(Tk):
         cypher_var = StringVar()
         debug_label = Label(decrypt_cypher_frame, bg='#D3D9FB', fg='red', textvariable=self.debug_info, font=self.mid_font)
         debug_label.grid(column=0, columnspan=2, row=0, sticky='nsew', padx=5, pady=5)
-        encrypted_cypher_label = Label(decrypt_cypher_frame, bg='#D3D9FB', text='Encrypted cypher', font=self.mid_font)
+        encrypted_cypher_label = Label(decrypt_cypher_frame, bg='#D3D9FB', text='Encrypted cypher:', font=self.mid_font)
         encrypted_cypher_label.grid(column=0, row=1, sticky='nsew', padx=5, pady=5)
         encrypted_cypher_entry = Entry(decrypt_cypher_frame, bg='#E3E9FF', textvariable=encrypted_cypher_var,
                                        font=self.mid_font, justify='center')
         encrypted_cypher_entry.grid(column=1, row=1, sticky='nsew', padx=5, pady=5)
-        get_id_button = Button(decrypt_cypher_frame, bg='#D3D9FB', text='Get your decryption data', font=self.mid_font,
+        get_id_button = Button(decrypt_cypher_frame, bg='#A8B2C8', text='Get your decryption data', font=self.mid_font,
                                command=lambda: self.get_decryption_data(pub_key_var, range_var))
         get_id_button.grid(column=0, columnspan=2, row=2, sticky='nsew', padx=5, pady=5)
         pub_key_label = Label(decrypt_cypher_frame, bg='#D3D9FB', text='Public key:', font=self.mid_font)
@@ -328,7 +340,7 @@ class Appwindow(Tk):
         priv_key_entry = Entry(decrypt_cypher_frame, bg='#E3E9FF', textvariable=priv_key_var,
                                font=self.mid_font, justify='center')
         priv_key_entry.grid(column=1, row=5, sticky='nsew', padx=5, pady=5)
-        decrypt_button = Button(decrypt_cypher_frame, bg='#D3D9FB', text='Decrypt cypher', font=self.mid_font,
+        decrypt_button = Button(decrypt_cypher_frame, bg='#A8B2C8', text='Decrypt cypher', font=self.mid_font,
                                 command=lambda: self.decrypt_cypher(priv_key_var, encrypted_cypher_var, range_var,
                                                                     cypher_var))
         decrypt_button.grid(column=0, row=6, sticky='nsew', padx=5, pady=5)
@@ -372,10 +384,10 @@ class Appwindow(Tk):
         self.set_title(top_title)
         lab = Label(top_frame, bg='#E3E9FF', textvariable=top_title, font=self.font)
         lab.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
-        button1 = Button(top_frame, bg='#394B59', image=self.rem_img, borderwidth=0, activebackground='#394B59',
+        button1 = Button(top_frame, bg='#394B59', image=self.prev_img, borderwidth=0, activebackground='#394B59',
                          command = lambda: self.update_help_mode(top_title, '-'))
         button1.grid(row=0, column=0, sticky='nsew')
-        button2 = Button(top_frame, bg='#394B59', image=self.add_img, borderwidth=0, activebackground='#394B59',
+        button2 = Button(top_frame, bg='#394B59', image=self.next_img, borderwidth=0, activebackground='#394B59',
                          command = lambda: self.update_help_mode(top_title, '+'))
         button2.grid(row=0, column=2, sticky='nsew')
 
@@ -429,21 +441,47 @@ class Appwindow(Tk):
   which are necessary to decryption numeric messages
   sent to you by other users'''
             case 2:
-                return '''- Numeric decryptor2 is a program, which allow you to
-  encryption and decryption numeric cyphers
-- Encryption is based on an asynchronic cryptograpy algorithm RSA
-- The program has the following functionalities (Top-left part):
-    ~ Creating ID
-    ~ Users management
-    ~ Encryption and decryption cyphers
-    ~ Help panel
-- On the bottom-left part you can see your Id data,
-  which are necessary to decryption numeric messages
-  sent to you by other users'''
+                return '''- Create your Id is an option needed to create your public data
+- This is necessary step if you want to decrypt messages
+- On the top of this panel is a debug info
+- Debug info will notify you if you type incorrect data
+- The maximum range is 99999 because of computational restrictions
+- Choose the minimum range you want to handle and press generate Id
+- Program will create your data randomly
+- Some of data (public key and range) will be saved in file
+- Send this data to your friends to allow them
+  to encrypt numeric cyphers to you
+- Private key is and essential element of your data
+  and it will be used for cyphers decryption
+- It need to be secured (It is recommended to keep it offline)
+'''
             case 3:
-                return 'Work in progress Managing users'
+                return '''- On the manage users tab you can adding and removing users
+- It allow to save a public data of your friends in database
+- You 'll use it to encrypt cyphers to them in the future
+- To add an user, you need to fill an entry places on the bottom
+- Public key and range are generated by your friend
+- Remember, that range is and upper limit of cypher to encrypt
+- Nick is an alias of your friend
+- Id is used for ordering friends in database (ascending order)
+- It is recommended to use small numbers for important users
+- Fill all entrance fields and press the add button
+- If all data are correct, new user will be added to database
+- You can also delete user by pressing remove button next to him'''
             case 4:
-                return 'Work in progress Encryption'
+                return '''- Encrypt cypher option show as a panel
+  in which you can to encrypt numeric cyphers to your friends
+- Type numeric value next to 'cypher to encrypt' label
+- In next step you need to fill pubic key and range of your friend
+- You can get this data by Id if you saved your friend in database
+- Remember that your cypher needs to be smaller than range value
+- Otherwise this cypher cannot be decoded by your friend
+- On the end generate encrypted cypher and send it to your friend'''
             case 5:
-                return 'Work in progress Decryption'
+                return '''- Decrypt cypher panel allow you to decode cyphers you received
+- Paste it next to encrypted cypher label
+- In the next step fill all of your data
+- The public data are visible in left bottom part
+- You can get this data also by button
+- After filling all fields you can decrypt transferred data'''
 
