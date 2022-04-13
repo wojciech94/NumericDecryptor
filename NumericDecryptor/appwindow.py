@@ -392,7 +392,7 @@ class Appwindow(Tk):
         button2.grid(row=0, column=2, sticky='nsew')
 
     def configure_help_frame(self, parent):
-        help_size = int(1366 / self.winfo_screenwidth() * 19)
+        help_size = int(self.winfo_screenwidth()/1366 * 19)
         fon = font.Font(family='courier', size=help_size, weight='bold')
         help_frame = Frame(parent, bg='#394B59')
         help_frame.grid(row=1, column=0, sticky='nsew')
